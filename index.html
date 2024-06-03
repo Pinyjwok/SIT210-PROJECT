@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basketball Scoreboard</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #111;
+            font-family: 'Press Start 2P', cursive;
+            color: #fff;
+        }
+        .container {
+            text-align: center;
+            width: 100%;
+            max-width: 600px;
+        }
+        .menu, .scoreboard, .leaderboard, .hidden, .game-over {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            background: #333;
+            padding: 20px;
+            border: 4px solid #ffcc00;
+            border-radius: 10px;
+            margin-top: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+        }
+        .visible {
+            display: flex;
+        }
+        h1 {
+            margin: 0 0 20px;
+            font-size: 2em;
+            color: #ffcc00;
+            text-shadow: 3px 3px #000;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
+            font-family: 'Press Start 2P', cursive;
+        }
+        input {
+            background: #555;
+            color: #fff;
+            width: 80%;
+            max-width: 300px;
+        }
+        button {
+            background: #ff6600;
+            color: #fff;
+        }
+        button:hover {
+            background: #ff8533;
+        }
+        .scoreboard .score, .timer, .currency, .target-score {
+            font-size: 1.5em;
+            color: #ffcc00;
+            margin-top: 10px;
+            text-shadow: 2px 2px #000;
+        }
+        .scoreboard .score {
+            font-size: 3em;
+            color: #ff3333;
+        }
+        .leaderboard {
+            text-align: left;
+            background: #444;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
+            width: 100%;
+        }
+        .leaderboard h2 {
+            color: #ffcc00;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px #000;
+        }
+        .leaderboard ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .leaderboard li {
+            font-size: 1em;
+            margin: 5px 0;
+            color: #fff;
+        }
+        .game-over {
+            font-size: 1.5em;
+            color: #ff3333;
+            margin-top: 20px;
+            text-shadow: 2px 2px #000;
+        }
+        .wallet {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #444;
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.5);
+            color: #ffcc00;
+            font-size: 1em;
+            text-shadow: 2px 2px #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="menu visible">
+            <h1>Basketball Game</h1>
+            <input type="text" id="username" placeholder="Enter your name">
+            <input type="number" id="bet" placeholder="Enter your bet (optional)">
+            <button id="startButton">Start Game</button>
+            <div class="leaderboard visible">
+                <h2>Leaderboard</h2>
+                <ul id="leaderboardList"></ul>
+            </div>
+        </div>
+        <div class="scoreboard hidden">
+            <h1>Scoreboard</h1>
+            <div class="score">0</div>
+            <div class="currency">$0</div>
+            <div class="target-score">Target: 0</div>
+            <div id="timer" class="timer">30</div>
+        </div>
+        <div class="game-over hidden">Game Over</div>
+        <button id="mainMenuButton" class="hidden">Main Menu</button>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        const socket = io();  // Initialize socket connection
+
+        // Event listener for DOM content loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('startButton').addEventListener('click', startGame);  // Add event listener to start game button
+            document.getElementById('mainMenuButton').addEventListener('click', showMainMenu);  // Add event listener to main menu button
+            fetchHighScores();  // Fetch high scores when the page loads and update regularly
+        });
+
+        // Function to start the game
+        function startGame() {
+            const username = document.getElementById('username').value.trim();  // Get username input value
+            const bet = parseInt(document.getElementById('bet').value, 10);  // Get bet input value
+
+            if (!username) {
+                alert('Please enter your username!');  // Show alert if username is empty
+                return;
+            }
+
+            // Check if the player has enough currency for the bet
+            socket.emit('getCurrency', { username });  // Emit getCurrency event with username
+            socket.once('currencyUpdate', function(data) {
+                const currentCurrency = data.currency;
+                if (bet > currentCurrency) {
+                    alert('You do not have enough currency to place this bet! You have $' + currentCurrency + '.');  // Show alert if bet is more than current currency
+                    return;
+                }
+
+                // Hide menu and show scoreboard
+                document.querySelector('.menu').classList.remove('visible');
+                document.querySelector('.menu').classList.add('hidden');
+                document.querySelector('.scoreboard').classList.add('visible');
+                document.querySelector('.scoreboard').classList.remove('hidden');
+
+                let timeLeft = 30;  // Set initial timer value
+                const timerInterval = setInterval(() => {
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);  // Clear interval when timer reaches 0
+                        endGame(username);  // End game
+                    } else {
+                        document.getElementById('timer').innerText = --timeLeft;  // Update timer display
+                    }
+                }, 1000);
+
+                socket.emit('startGame', { username, bet });  // Emit startGame event with username and bet
+
+                socket.once('startGameResponse', function(data) {
+                    document.querySelector('.target-score').innerText = `Target: ${data.targetScore}`;  // Update target score display
+                });
+
+                // Continuously check for score updates
+                socket.on('scoreUpdate', function(data) {
+                    if (data.username === username) {
+                        document.querySelector('.score').innerText = data.score;  // Update score display
+                        document.querySelector('.currency').innerText = `$${data.currency}`;  // Update currency display
+                    }
+                });
+            });
+        }
+
+        // Function to end the game
+        function endGame(username) {
+            socket.emit('endGame', { username });  // Emit endGame event with username
+            document.querySelector('.scoreboard').classList.remove('visible');
+            document.querySelector('.scoreboard').classList.add('hidden');
+            document.querySelector('.game-over').classList.add('visible');
+            document.querySelector('.game-over').classList.remove('hidden');
+            document.getElementById('mainMenuButton').classList.remove('hidden');
+            fetchHighScores();  // Fetch high scores after the game ends
+        }
+
+        // Function to show the main menu
+        function showMainMenu() {
+            document.querySelector('.menu').classList.add('visible');
+            document.querySelector('.menu').classList.remove('hidden');
+            document.querySelector('.game-over').classList.add('hidden');
+            document.querySelector('.game-over').classList.remove('visible');
+            document.querySelector('.scoreboard').classList.add('hidden');
+            document.querySelector('.scoreboard').classList.remove('visible');
+            document.getElementById('mainMenuButton').classList.add('hidden');
+            resetGame();  // Reset game state
+        }
+
+        // Function to reset the game state
+        function resetGame() {
+            document.getElementById('username').value = '';  // Clear username input
+            document.getElementById('bet').value = '';  // Clear bet input
+            document.getElementById('timer').innerText = '30';  // Reset timer display
+            document.querySelector('.score').innerText = '0';  // Reset score display
+            document.querySelector('.currency').innerText = '$0';  // Reset currency display
+            document.querySelector('.target-score').innerText = 'Target: 0';  // Reset target score display
+        }
+
+        // Function to fetch high scores from the server
+        function fetchHighScores() {
+            fetch('/highscores')
+                .then(response => response.json())
+                .then(data => {
+                    updateLeaderboardUI(data);  // Update leaderboard UI with fetched data
+                })
+                .catch(error => console.error('Error fetching high scores:', error));
+        }
+
+        // Function to update the leaderboard UI
+        function updateLeaderboardUI(data) {
+            const leaderboardList = document.getElementById('leaderboardList');
+            leaderboardList.innerHTML = '';  // Clear existing leaderboard
+            data.forEach((entry, index) => {
+                const li = document.createElement('li');
+                li.textContent = `${index + 1}. ${entry.username}: ${entry.score}`;  // Create list item for each leaderboard entry
+                leaderboardList.appendChild(li);  // Append list item to leaderboard
+            });
+        }
+
+        // Event listener for leaderboard updates
+        socket.on('updateLeaderboard', function(data) {
+            updateLeaderboardUI(data);  // Update leaderboard UI with new data
+        });
+    </script>
+</body>
+</html>
