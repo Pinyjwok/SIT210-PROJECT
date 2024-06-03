@@ -1,0 +1,114 @@
+{
+    "players": [
+        {
+            "username": "Pinyjwok",
+            "score": 14,
+            "currency": 5.5,
+            "mode": "competitive",
+            "game_started": false,
+            "game_over": true,
+            "bet": 1,
+            "target_score": 8
+        },
+        {
+            "username": "p",
+            "score": 7,
+            "currency": 63.0,
+            "mode": "competitive",
+            "game_started": false,
+            "game_over": true,
+            "bet": 0,
+            "target_score": 9
+        },
+        {
+            "username": "123",
+            "score": 5,
+            "currency": 102,
+            "mode": "competitive",
+            "game_started": false,
+            "game_over": true,
+            "bet": 10,
+            "target_score": 4
+        },
+        {
+            "username": "new player",
+            "score": 7,
+            "currency": 103,
+            "mode": "competitive",
+            "game_started": false,
+            "game_over": true,
+            "bet": null,
+            "target_score": 4
+        },
+        {
+            "username": "1",
+            "score": 0,
+            "currency": 100,
+            "mode": "competitive",
+            "game_started": false,
+            "game_over": true,
+            "bet": 0,
+            "target_score": 8
+        },
+        {
+            "username": "player 1",
+            "score": 12,
+            "currency": 103.0,
+            "mode": "competitive",
+            "game_started": false,
+            "game_over": true,
+            "bet": 0,
+            "target_score": 8
+        },
+        {
+            "username": "piny",
+            "score": 0,
+            "currency": 96.5,
+            "mode": "competitive",
+            "game_started": false,
+            "game_over": true,
+            "bet": 0,
+            "target_score": 5
+        },
+        {
+            "username": "q",
+            "score": 0,
+            "currency": 100,
+            "mode": "competitive",
+            "game_started": false,
+            "game_over": true,
+            "bet": 0,
+            "target_score": 9
+        },
+        {
+            "username": "0",
+            "score": 7,
+            "currency": 107.5,
+            "mode": "competitive",
+            "game_started": false,
+            "game_over": true,
+            "bet": 0,
+            "target_score": 10
+        },
+        {
+            "username": "op",
+            "score": 0,
+            "currency": 100,
+            "mode": "competitive",
+            "game_started": false,
+            "game_over": true,
+            "bet": 0,
+            "target_score": 5
+        },
+        {
+            "username": "pin",
+            "score": 9,
+            "currency": 104.5,
+            "mode": "competitive",
+            "game_started": false,
+            "game_over": true,
+            "bet": 0,
+            "target_score": 5
+        }
+    ]
+}
